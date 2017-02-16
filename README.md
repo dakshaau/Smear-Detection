@@ -1,5 +1,5 @@
-Automatic Lens Smear Detection
+##Automatic Lens Smear Detection
 
-Language: Python
+#Language:# Python
 
-Libraries: OpenCV, Numpy
+#Libraries:# OpenCV, Numpy
