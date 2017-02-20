@@ -102,15 +102,38 @@ if __name__ == '__main__':
 			grad = cv2.imread(d+'_avg_grad.jpg',0)
 
 			imgi = np.int32(img)
-			r,c = np.where(imgi < 90)
-			imgi[r,c] -= 40
-			r,c = np.where(imgi >= 90)
-			imgi[r,c] += 40
+			r,c = np.where(imgi < 100)
+			imgi[r,c] = 0
+			r,c = np.where(imgi >= 100)
+			imgi[r,c] = 255
 			imgi = np.uint8(imgi)
+
+			h = imgi.shape[0]
+			new_h = int(h/3)
+			
+			# Since we know that the center part of the image consists of patterns from the road
+			# for our currrent dataset. So we can simply exclude the center part of the image from
+			# smear mask
+
+			imgi[new_h:2*new_h,:] = 255
+
+			# imgi = cv2.threshold(imgi, 127, 255, cv2.THRESH_BINARY_INV)
+			mask = 255*np.ones(imgi.shape,dtype=imgi.dtype) - imgi
+			kernel = np.ones((5,5), np.uint8)
+			mask = cv2.dilate(mask, kernel, iterations = 1)
+
+			r,c = np.where(mask == 0)
+
+			img1 = img.copy()
+
+			img1[r,c] = 0
+
+			cv2.imwrite(d+'_smear_mask.jpg',mask)
 
 			while True:
 				key = cv2.waitKey(10)
 				if key == 27:
 					break
-				cv2.imshow('Dilated Gradient',imgi)
-				# cv2.imshow('Gradient',im)
+				cv2.imshow('Mask',mask)
+				cv2.imshow('Smear',img1)
+				cv2.imshow('Average Image', img)
