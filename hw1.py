@@ -37,6 +37,7 @@ if __name__ == '__main__':
 	# print(dirs)
 	# dirs = ['cam_3']
 	for d in dirs:
+		cv2.destroyAllWindows()
 		x, files = getList('sample_drive/'+d)
 		# print(len(files))
 		masks = []
@@ -50,9 +51,10 @@ if __name__ == '__main__':
 		count = 0
 		avg = []
 		avg_grad = []
-		if not os.path.exists(d+'_avg_img.jpg'):
+		avg_blur = []
+		if not os.path.exists(d+'_avg_img.jpg') or not os.path.exists(d+'_avg_blur.jpg'):
 			for i,f in enumerate(files):
-				img = cv2.imread(dir+'/'+f)
+				img = cv2.imread(dir+'/'+f,0)
 				h,w = img.shape[:2]
 				ratio = w/float(h)
 				img = cv2.resize(img, (int(ratio*720), 720))
@@ -62,11 +64,19 @@ if __name__ == '__main__':
 				if i == 0:
 					avg = np.zeros(img.shape,dtype=np.float64)
 					avg_grad = np.zeros((img.shape[:2]),dtype=np.float64)
+					avg_blur = np.zeros((img.shape),dtype=np.float64)
 				avg_img = np.mean(img)
 				if avg_img > 15:
 					count += 1
+					img_blur = cv2.blur(img,(11,11))
+					# while True:
+					# 	 k = cv2.waitKey(10)
+					# 	 if k == 27:
+					# 	 	break
+					# 	 cv2.imshow('blur',np.uint8(img_blur))
+					avg_blur += img_blur
 					avg += np.float64(img)
-					img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+					# img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 					grad = cv2.Laplacian(img, cv2.CV_64F)
 					avg_grad += np.float64(grad)
 				# for x,im in enumerate(imgs):
@@ -81,13 +91,15 @@ if __name__ == '__main__':
 				
 
 				pro = ((i+1.)/tot)*100
-				sys.stdout.write("\rCompleted: %.2f%% %d %d" % (pro,i,count))
+				sys.stdout.write("\rCompleted: %.2f%%" % (pro))
 				# sys.stdout.flush()
 				# prev = img
 			avg /= count
 			avg_grad /= count
+			avg_blur /= count
 			avg = np.uint8(avg)
 			avg_grad = np.uint8(avg_grad)
+			avg_blur = np.uint8(avg_blur)
 			# while True:
 			# 	key = cv2.waitKey(10)
 			# 	if key == 27:
@@ -96,44 +108,49 @@ if __name__ == '__main__':
 			# 	cv2.imshow('Average Grdient', avg_grad)
 			cv2.imwrite(d+'_avg_img.jpg',avg)
 			cv2.imwrite(d+'_avg_grad.jpg',avg_grad)
+			cv2.imwrite(d+'_avg_blur.jpg',avg_blur)
 			print('\n')
-		else:
-			img = cv2.imread(d+'_avg_img - Copy.jpg',0)
-			grad = cv2.imread(d+'_avg_grad.jpg',0)
+		
+		img = cv2.imread(d+'_avg_img.jpg',0)
+		grad = cv2.imread(d+'_avg_grad.jpg',0)
+		blur = cv2.imread(d+'_avg_blur.jpg',0)
+		imgi = np.int32(img)
 
-			imgi = np.int32(img)
-			r,c = np.where(imgi < 100)
-			imgi[r,c] = 0
-			r,c = np.where(imgi >= 100)
-			imgi[r,c] = 255
-			imgi = np.uint8(imgi)
+		bluri = np.int32(blur)
+		# r,c = np.where(imgi < 100)
+		# imgi[r,c] = 0
+		# r,c = np.where(imgi >= 100)
+		# imgi[r,c] = 255
+		# imgi = np.uint8(imgi)
 
-			h = imgi.shape[0]
-			new_h = int(h/3)
+		# h = imgi.shape[0]
+		# new_h = int(h/3)
 			
-			# Since we know that the center part of the image consists of patterns from the road
-			# for our currrent dataset. So we can simply exclude the center part of the image from
-			# smear mask
+		# # Since we know that the center part of the image consists of patterns from the road
+		# # for our currrent dataset. So we can simply exclude the center part of the image from
+		# # smear mask
 
-			imgi[new_h:2*new_h,:] = 255
+		# imgi[new_h:2*new_h,:] = 255
 
-			# imgi = cv2.threshold(imgi, 127, 255, cv2.THRESH_BINARY_INV)
-			mask = 255*np.ones(imgi.shape,dtype=imgi.dtype) - imgi
-			kernel = np.ones((5,5), np.uint8)
-			mask = cv2.dilate(mask, kernel, iterations = 1)
+		# # imgi = cv2.threshold(imgi, 127, 255, cv2.THRESH_BINARY_INV)
+		# mask = 255*np.ones(imgi.shape,dtype=imgi.dtype) - imgi
+		# kernel = np.ones((5,5), np.uint8)
+		# mask = cv2.dilate(mask, kernel, iterations = 1)
+		# r,c = np.where(mask == 0)
 
-			r,c = np.where(mask == 0)
+		# img1 = img.copy()
 
-			img1 = img.copy()
+		# img1[r,c] = 0
 
-			img1[r,c] = 0
+		mask = bluri - imgi
+		mask = np.uint8(mask)
+		cv2.imwrite(d+'_smear_mask.jpg',mask)
 
-			cv2.imwrite(d+'_smear_mask.jpg',mask)
-
-			while True:
-				key = cv2.waitKey(10)
-				if key == 27:
-					break
-				cv2.imshow('Mask',mask)
-				cv2.imshow('Smear',img1)
-				cv2.imshow('Average Image', img)
+		while True:
+			key = cv2.waitKey(10)
+			if key == 27:
+				cv2.destroyAllWindows()
+				break
+			cv2.imshow('Mask',mask)
+		# 	cv2.imshow('Smear',img1)
+		# 	cv2.imshow('Average Image', img)
