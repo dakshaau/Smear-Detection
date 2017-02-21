@@ -50,11 +50,12 @@ if __name__ == '__main__':
 		c_masks = []
 		count = 0
 		avg = []
+		# avg_inv = []
 		# avg_grad = []
 		# avg_blur = []
 		if not os.path.exists(d+'_avg_img.jpg'): #or not os.path.exists(d+'_avg_blur.jpg'):
 			for i,f in enumerate(files):
-				img = cv2.imread(dir+'/'+f)
+				img = cv2.imread(dir+'/'+f,0)
 				h,w = img.shape[:2]
 				ratio = w/float(h)
 				img = cv2.resize(img, (int(ratio*720), 720))
@@ -64,10 +65,12 @@ if __name__ == '__main__':
 				if i == 0:
 					avg = np.zeros(img.shape,dtype=np.float64)
 					# avg_grad = np.zeros((img.shape[:2]),dtype=np.float64)
-					# avg_blur = np.zeros((img.shape),dtype=np.float64)
+					# avg_inv = np.zeros((img.shape),dtype=np.float64)
 				avg_img = np.mean(img)
 				if avg_img > 15:
 					count += 1
+					# img_inv = 255*np.ones(img.shape,np.float64) -np.float64(img)
+					# avg_inv += img_inv
 					# img_blur = cv2.blur(img,(3,3))
 					# # while True:
 					# # 	 k = cv2.waitKey(10)
@@ -95,9 +98,11 @@ if __name__ == '__main__':
 				# sys.stdout.flush()
 				# prev = img
 			avg /= count
+			# avg_inv /= count
 			# avg_grad /= count
 			# avg_blur /= count
 			avg = np.uint8(avg)
+			# avg_inv = np.uint8(avg_inv)
 			# avg_grad = np.uint8(avg_grad)
 			# avg_blur = np.uint8(avg_blur)
 			# while True:
@@ -107,6 +112,7 @@ if __name__ == '__main__':
 			# 	cv2.imshow('Average Image', avg)
 			# 	cv2.imshow('Average Grdient', avg_grad)
 			cv2.imwrite(d+'_avg_img.jpg',avg)
+			# cv2.imwrite(d+'_avg_inv.jpg',avg_inv)
 			# cv2.imwrite(d+'_avg_grad.jpg',avg_grad)
 			# cv2.imwrite(d+'_avg_blur.jpg',avg_blur)
 			print('\n')
@@ -146,11 +152,11 @@ if __name__ == '__main__':
 		# mask = np.uint8(mask)
 		cv2.imwrite(d+'_smear_mask.jpg',mask)
 
-		while True:
-			key = cv2.waitKey(10)
-			if key == 27:
-				cv2.destroyAllWindows()
-				break
-			cv2.imshow('Mask',mask)
-			cv2.imshow('Smear',img1)
-			cv2.imshow('Average Image', img)
+		# while True:
+		# 	key = cv2.waitKey(10)
+		# 	if key == 27:
+		# 		cv2.destroyAllWindows()
+		# 		break
+		# 	cv2.imshow('Mask',mask)
+		# 	cv2.imshow('Smear',img1)
+		# 	cv2.imshow('Average Image', img)
