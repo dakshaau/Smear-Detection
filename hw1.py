@@ -128,7 +128,7 @@ if __name__ == '__main__':
 		r,c = np.where(imgi >= 100)
 		imgi[r,c] = 255
 		imgi = np.uint8(imgi)
-
+		cv2.imwrite(d+'_int.jpg',imgi)
 		h = imgi.shape[0]
 		new_h = int(h/3)
 			
